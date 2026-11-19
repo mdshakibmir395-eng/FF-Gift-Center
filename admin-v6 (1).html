@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF Gift Center - এডমিন প্যানেল</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font (Hind Siliguri for Bengali) -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ff: {
+                            red: '#ff4655',
+                            darkRed: '#d92c3a',
+                            gold: '#ffb400',
+                            cyan: '#00f0ff',
+                            purple: '#a855f7',
+                            darkBg: '#0f172a',
+                            cardBg: '#1e293b',
+                            navy: '#0b0f19'
+                        }
+                    },
+                    fontFamily: { sans: ['Hind Siliguri', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Hind Siliguri', sans-serif; background-color: #0f172a; color: #f8fafc; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    </style>
+</head>
+<body class="text-slate-100 antialiased flex flex-col min-h-screen">
+
+    <!-- ADMIN LOGIN GATE OVERLAY -->
+    <div id="adminLoginOverlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-md w-full p-7 shadow-2xl space-y-5">
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-ff-red to-ff-gold text-slate-900 flex items-center justify-center mx-auto text-2xl font-black shadow-lg">
+                    <i class="fas fa-user-lock"></i>
+                </div>
+                <h2 class="text-2xl font-extrabold text-white">এডমিন প্যানেল লগইন</h2>
+                <p class="text-xs text-slate-400">FF Gift Center কন্ট্রোল প্যানেলে প্রবেশ করতে ইউজারনেম ও পাসওয়ার্ড দিন</p>
+            </div>
+
+            <form onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">ইউজারনেম (Username)</label>
+                    <div class="relative">
+                        <span class="absolute left-3.5 top-2.5 text-slate-400"><i class="fas fa-user"></i></span>
+                        <input type="text" id="loginUsername" required placeholder="ইউজারনেম লিখুন " class="w-full bg-slate-800 text-slate-100 text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 focus:border-ff-gold outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1.5">পাসওয়ার্ড (Password)</label>
+                    <div class="relative">
+                        <span class="absolute left-3.5 top-2.5 text-slate-400"><i class="fas fa-key"></i></span>
+                        <input type="password" id="loginPassword" required placeholder="পাসওয়ার্ড লিখুন " class="w-full bg-slate-800 text-slate-100 text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 focus:border-ff-gold outline-none">
+                    </div>
+                </div>
+                <p id="loginErrorMsg" class="hidden text-xs text-ff-red font-bold bg-ff-red/10 border border-ff-red/30 px-3 py-2 rounded-lg text-center">
+                    ইউজারনেম অথবা পাসওয়ার্ড ভুল হয়েছে!
+                </p>
+                <button type="submit" class="w-full bg-gradient-to-r from-ff-red to-ff-darkRed hover:from-ff-darkRed hover:to-ff-red text-white py-3 rounded-xl font-bold text-sm shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fas fa-sign-in-alt"></i> লগইন করুন
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Top Bar -->
+    <div class="bg-ff-navy text-white text-xs py-2.5 px-4 shadow-md border-b border-slate-800 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <span class="bg-gradient-to-r from-ff-gold to-ff-red text-slate-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded tracking-wide uppercase shadow">Admin Panel</span>
+                <span class="hidden sm:inline text-slate-400">FF Gift Center - প্রোডাক্ট, পেমেন্ট ও শপ টাইম কন্ট্রোল</span>
+            </div>
+            
+            <div class="flex items-center gap-2 sm:gap-3">
+                <button onclick="scrollToOrders()" class="relative bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+                    <i id="notifBellIcon" class="fas fa-bell text-ff-gold"></i>
+                    <span class="hidden sm:inline font-semibold">নতুন পেমেন্ট</span>
+                    <span id="pendingOrderBadge" class="bg-ff-red text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">0</span>
+                </button>
+
+                <a href="ff-gift-center-v6.html" target="_blank" class="bg-ff-red hover:bg-ff-darkRed text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow">
+                    <i class="fas fa-external-link-alt"></i> গ্রাহক শপ খুলুন
+                </a>
+
+                <button onclick="handleAdminLogout()" title="লগআউট করুন" class="bg-slate-800 hover:bg-red-600/80 text-slate-300 hover:text-white px-2.5 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1 font-bold">
+                    <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">লগআউট</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Content -->
+    <main id="adminMainContent" class="hidden flex-grow max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+        
+        <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-xl">
+            <div>
+                <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-user-shield text-ff-gold"></i> এডমিন ড্যাশবোর্ড
+                </h1>
+                <p class="text-xs text-slate-400 mt-1">শপ ওপেনিং টাইম, অর্ডার ম্যানেজমেন্ট, পাসওয়ার্ড পরিবর্তন ও প্রোডাক্ট কন্ট্রোল</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <button onclick="markAllOrdersSeen()" class="text-xs bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-3 py-2 rounded-lg border border-emerald-600/40 transition font-semibold">
+                    <i class="fas fa-check-double mr-1"></i> সব নোটিফিকেশন দেখা হয়েছে
+                </button>
+            </div>
+        </div>
+
+        <!-- SHOP OPENING TIME & ON/OFF CONTROL SECTION -->
+        <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-4 pb-2 border-b border-slate-800">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-store text-ff-cyan"></i> শপ ওপেনিং টাইম ও কেনাকাটা কন্ট্রোল (রাত ১০:০০ টা - রাত ৩:০০ টা)
+                </h2>
+                <span id="adminCurrentShopBadge" class="text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
+                    বর্তমান অবস্থা: চেক হচ্ছে...
+                </span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-semibold text-slate-300 mb-1.5">শপ কন্ট্রোল মোড নির্বাচন করুন</label>
+                    <select id="shopControlMode" class="w-full bg-slate-800 text-slate-200 text-sm px-3.5 py-2.5 rounded-lg border border-slate-700 focus:border-ff-cyan outline-none">
+                        <option value="auto">অটোমেটিক টাইম (রাত ১০:০০ টা থেকে রাত ৩:০০ টা পর্যন্ত খোলা, বাকি সময় বন্ধ)</option>
+                        <option value="open">ম্যানুয়াল অন (এখনই শপ অন করুন - কাস্টমার কিনতে পারবে)</option>
+                        <option value="closed">ম্যানুয়াল অফ (এখনই শপ বন্ধ করুন - রাত ১০:০০ টা থেকে কেনা নেওয়া দেখাবে)</option>
+                    </select>
+                </div>
+                <div>
+                    <button onclick="saveShopStatusConfig()" class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white py-2.5 rounded-lg font-bold text-sm transition shadow-lg">
+                        <i class="fas fa-power-off mr-1"></i> শপ স্ট্যাটাস সেভ করুন
+                    </button>
+                </div>
+            </div>
+            <p class="text-[11px] text-slate-400 mt-3">
+                <i class="fas fa-info-circle text-ff-gold mr-1"></i> নোট: "অটোমেটিক টাইম" সিলেক্ট থাকলে প্রতিদিন রাত ১০:০০ টা থেকে রাত ৩:০০ টা পর্যন্ত কাস্টমার প্যানেল অটোমেটিক খোলা থাকবে এবং বাকি সময় বন্ধ থাকবে। এছাড়া আপনি যেকোনো সময় ম্যানুয়ালি অন বা অফ করতে পারবেন।
+            </p>
+        </section>
+
+        <!-- ADMIN USERNAME & PASSWORD CHANGE SECTION -->
+        <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl">
+            <h2 class="text-lg font-bold text-white mb-4 pb-2 border-b border-slate-800 flex items-center gap-2">
+                <i class="fas fa-shield-alt text-ff-gold"></i> এডমিন ইউজারনেম ও পাসওয়ার্ড পরিবর্তন করুন
+            </h2>
+            <form onsubmit="updateAdminCredentials(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">নতুন ইউজারনেম (New Username)</label>
+                    <input type="text" id="newAdminUser" required placeholder="যেমন: admin" class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 focus:border-ff-gold outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">নতুন পাসওয়ার্ড (New Password)</label>
+                    <input type="text" id="newAdminPass" required placeholder="নতুন পাসওয়ার্ড লিখুন" class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 focus:border-ff-gold outline-none">
+                </div>
+                <div>
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-lg font-bold text-sm transition shadow-lg">
+                        <i class="fas fa-key mr-1"></i> ইউজার ও পাসওয়ার্ড আপডেট করুন
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- FLASH SALE CONTROL SECTION -->
+        <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl">
+            <h2 class="text-lg font-bold text-white mb-4 pb-2 border-b border-slate-800 flex items-center gap-2">
+                <i class="fas fa-bolt text-ff-gold"></i> ফ্ল্যাশ সেল অফার কন্ট্রোল প্যানেল
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">স্ট্যাটাস (Status)</label>
+                    <select id="flashStatus" class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 outline-none">
+                        <option value="on">অন (On - শপে দেখাবে)</option>
+                        <option value="off">অফ (Off - শপ থেকে লুকিয়ে থাকবে)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">ঘন্টা (Hours)</label>
+                    <input type="number" id="flashHours" value="8" class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-300 mb-1">মিনিট (Minutes)</label>
+                    <input type="number" id="flashMinutes" value="42" class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 outline-none">
+                </div>
+                <div>
+                    <button onclick="saveFlashSaleConfig()" class="w-full bg-ff-red hover:bg-ff-darkRed text-white py-2.5 rounded-lg font-bold text-sm transition shadow-lg">
+                        <i class="fas fa-save mr-1"></i> ফ্ল্যাশ সেল আপডেট করুন
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- LIVE PAYMENT & TRANSACTION ID NOTIFICATIONS SECTION -->
+        <section id="ordersSection" class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl">
+            <div class="flex flex-wrap justify-between items-center gap-2 mb-4 pb-3 border-b border-slate-800">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-receipt text-emerald-400"></i> পেমেন্ট ও Transaction ID নোটিফিকেশন
+                    <span id="unreadAlertTag" class="hidden bg-ff-red text-white text-[10px] px-2 py-0.5 rounded-full animate-pulse">নতুন পেমেন্ট এসেছে!</span>
+                </h2>
+                <div class="flex items-center gap-2">
+                    <span id="totalOrdersCount" class="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">মোট অর্ডার: 0</span>
+                    <button onclick="clearCompletedOrders()" class="text-xs bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-2.5 py-1 rounded-lg transition">ক্লিয়ার হিস্ট্রি</button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-800 text-slate-200 uppercase font-semibold border-b border-slate-700">
+                        <tr>
+                            <th class="p-3">সময়</th>
+                            <th class="p-3">Player UID</th>
+                            <th class="p-3">আইটেমসমূহ</th>
+                            <th class="p-3">মেথড ও পরিমাণ</th>
+                            <th class="p-3">Transaction ID (TrxID) ও ভেরিফাই</th>
+                            <th class="p-3">স্ট্যাটাস</th>
+                            <th class="p-3 text-center">ডেলিভারি / অ্যাকশন</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody" class="divide-y divide-slate-800"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PRODUCT MANAGEMENT SECTION -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-1 bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl h-fit">
+                <h2 id="formTitle" class="text-lg font-bold text-white mb-4 pb-2 border-b border-slate-800 flex items-center gap-2">
+                    <i class="fas fa-plus-circle text-ff-red"></i> নতুন প্রোডাক্ট ইনপুট দিন
+                </h2>
+                
+                <form id="productForm" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                    <input type="hidden" id="editProductId" value="">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">প্রোডাক্টের নাম *</label>
+                        <input type="text" id="prodName" required placeholder="যেমন: Lol Emote" class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">বিক্রয় মূল্য (৳) *</label>
+                            <input type="number" id="prodPrice" required placeholder="250" class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-300 mb-1">পূর্বের মূল্য (৳)</label>
+                            <input type="number" id="prodOldPrice" placeholder="500" class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">ক্যাটাগরি *</label>
+                        <select id="prodCategory" required class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 outline-none">
+                            <option value="emote">ইমোট (Emote)</option>
+                            <option value="dress">ড্রেস (Dress/Bundle)</option>
+                            <option value="bag">ব্যাগ (Bag)</option>
+                            <option value="pet">পেট (Pet)</option>
+                            <option value="shirt">শার্ট (Shirt)</option>
+                            <option value="pant">প্যান্ট (Pant)</option>
+                            <option value="glowall">গ্লোয়াল(glowall)</option>
+                            <option value="faceprint">ফেসপ্রিন্ট(faceprint)</option>
+                            <option value="vehicles">vehicles</option>
+                            <option value="weapon">weapon</option>
+                            <option value="others">others</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">প্রোডাক্টের ছবি (গ্যালারি থেকে সিলেক্ট করুন) *</label>
+                        <input type="file" id="prodImageFile" accept="image/*" required onchange="previewSelectedImage(event)" class="hidden">
+                        <input type="hidden" id="prodImageBase64" value="">
+                        <button type="button" onclick="document.getElementById('prodImageFile').click()" class="w-full bg-slate-800 hover:bg-slate-700 text-ff-cyan text-xs font-bold py-2.5 px-3 rounded-lg border border-dashed border-slate-600 hover:border-ff-cyan transition flex items-center justify-center gap-2">
+                            <i class="fas fa-images text-base"></i> <span id="fileSelectLabel">গ্যালারি থেকে ছবি বাছাই করুন (Choose Image)</span>
+                        </button>
+                        <div id="imagePreviewBox" class="hidden mt-2 relative w-24 h-24 rounded-lg overflow-hidden border border-slate-700 bg-slate-950">
+                            <img id="imagePreviewImg" src="" alt="Preview" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 mb-1">বিবরণ</label>
+                        <textarea id="prodDesc" rows="2" placeholder="প্রোডাক্ট সম্পর্কে লিখুন..." class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 outline-none"></textarea>
+                    </div>
+                    <div class="flex gap-2 pt-2">
+                        <button type="submit" id="submitBtn" class="flex-1 bg-ff-red hover:bg-ff-darkRed text-white py-2.5 rounded-lg font-bold text-sm transition shadow-lg">সেভ করুন</button>
+                        <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden bg-slate-800 text-slate-300 px-4 py-2.5 rounded-lg text-sm font-semibold">বাতিল</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl overflow-hidden">
+                <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2"><i class="fas fa-list text-ff-cyan"></i> সকল প্রোডাক্টের তালিকা</h2>
+                    <span id="adminProductCount" class="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-full border border-slate-700">মোট 0 টি</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-800 text-slate-200 uppercase font-semibold border-b border-slate-700">
+                            <tr>
+                                <th class="p-3">ছবি</th>
+                                <th class="p-3">নাম</th>
+                                <th class="p-3">ক্যাটাগরি</th>
+                                <th class="p-3">মূল্য</th>
+                                <th class="p-3 text-center">অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminTableBody" class="divide-y divide-slate-800"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let products = JSON.parse(localStorage.getItem('ff_products')) || [];
+        let orders = JSON.parse(localStorage.getItem('ff_orders')) || [];
+
+        // Default credentials: username = admin, password = admin
+        function getAdminCreds() {
+            return JSON.parse(localStorage.getItem('ff_admin_creds')) || { username: 'admin', password: 'admin' };
+        }
+
+        function checkAuthStatus() {
+            const isLoggedIn = sessionStorage.getItem('ff_admin_logged_in') === 'true';
+            const overlay = document.getElementById('adminLoginOverlay');
+            const mainContent = document.getElementById('adminMainContent');
+            if (isLoggedIn) {
+                overlay.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                const creds = getAdminCreds();
+                document.getElementById('newAdminUser').value = creds.username;
+                document.getElementById('newAdminPass').value = creds.password;
+            } else {
+                overlay.classList.remove('hidden');
+                mainContent.classList.add('hidden');
+            }
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('loginUsername').value.trim();
+            const pass = document.getElementById('loginPassword').value.trim();
+            const creds = getAdminCreds();
+            const errEl = document.getElementById('loginErrorMsg');
+
+            if (user.toLowerCase() === creds.username.toLowerCase() && pass === creds.password) {
+                sessionStorage.setItem('ff_admin_logged_in', 'true');
+                errEl.classList.add('hidden');
+                checkAuthStatus();
+                showNotification("সফলভাবে এডমিন প্যানেলে লগইন হয়েছে!");
+            } else {
+                errEl.classList.remove('hidden');
+            }
+        }
+
+        function handleAdminLogout() {
+            sessionStorage.removeItem('ff_admin_logged_in');
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+            checkAuthStatus();
+        }
+
+        function updateAdminCredentials(e) {
+            e.preventDefault();
+            const newUser = document.getElementById('newAdminUser').value.trim();
+            const newPass = document.getElementById('newAdminPass').value.trim();
+            if (!newUser || !newPass) {
+                alert("ইউজারনেম এবং পাসওয়ার্ড উভয়ই লিখুন!");
+                return;
+            }
+            localStorage.setItem('ff_admin_creds', JSON.stringify({ username: newUser, password: newPass }));
+            showNotification("এডমিন ইউজারনেম ও পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!");
+        }
+
+        // Shop Opening Time Control Logic
+        function isShopCurrentlyOpen() {
+            let shopConfig = JSON.parse(localStorage.getItem('ff_shop_status')) || { mode: 'auto' };
+            if (shopConfig.mode === 'open') return true;
+            if (shopConfig.mode === 'closed') return false;
+            const hour = new Date().getHours();
+            return (hour >= 22 || hour < 3);
+        }
+
+        function loadShopStatusConfig() {
+            let shopConfig = JSON.parse(localStorage.getItem('ff_shop_status')) || { mode: 'auto' };
+            document.getElementById('shopControlMode').value = shopConfig.mode;
+            updateAdminShopBadge();
+        }
+
+        function saveShopStatusConfig() {
+            const mode = document.getElementById('shopControlMode').value;
+            localStorage.setItem('ff_shop_status', JSON.stringify({ mode }));
+            updateAdminShopBadge();
+            showNotification("শপ ওপেনিং টাইম স্ট্যাটাস আপডেট করা হয়েছে!");
+        }
+
+        function updateAdminShopBadge() {
+            const badge = document.getElementById('adminCurrentShopBadge');
+            const isOpen = isShopCurrentlyOpen();
+            if (isOpen) {
+                badge.className = "text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40";
+                badge.innerHTML = `<i class="fas fa-check-circle mr-1"></i> বর্তমান অবস্থা: শপ খোলা আছে (কেনাকাটা চালু)`;
+            } else {
+                badge.className = "text-xs font-extrabold px-3 py-1 rounded-full bg-red-500/20 text-ff-red border border-ff-red/40";
+                badge.innerHTML = `<i class="fas fa-lock mr-1"></i> বর্তমান অবস্থা: শপ বন্ধ আছে (রাত ১০টায় খুলবে)`;
+            }
+        }
+
+        window.onload = function() {
+            checkAuthStatus();
+            loadShopStatusConfig();
+            renderAdminProducts();
+            renderOrders();
+            loadFlashSaleConfig();
+
+            setInterval(() => {
+                updateAdminShopBadge();
+                let latestOrders = JSON.parse(localStorage.getItem('ff_orders')) || [];
+                if (latestOrders.length !== orders.length) {
+                    let isNew = latestOrders.length > orders.length;
+                    orders = latestOrders;
+                    renderOrders();
+                    if (isNew && orders[0]) {
+                        showNotification(`নতুন পেমেন্ট! TrxID: ${orders[0].trxId} (${orders[0].amount} BDT)`);
+                    }
+                }
+            }, 2500);
+        };
+
+        function loadFlashSaleConfig() {
+            let config = JSON.parse(localStorage.getItem('ff_flash_sale')) || { status: 'on', hours: 8, minutes: 42, seconds: 19 };
+            document.getElementById('flashStatus').value = config.status;
+            document.getElementById('flashHours').value = config.hours;
+            document.getElementById('flashMinutes').value = config.minutes;
+        }
+
+        function saveFlashSaleConfig() {
+            let status = document.getElementById('flashStatus').value;
+            let hours = parseInt(document.getElementById('flashHours').value) || 0;
+            let minutes = parseInt(document.getElementById('flashMinutes').value) || 0;
+
+            let config = { status, hours, minutes, seconds: 0 };
+            localStorage.setItem('ff_flash_sale', JSON.stringify(config));
+            showNotification("ফ্ল্যাশ সেল সেটিংস সফলভাবে আপডেট করা হয়েছে!");
+        }
+
+        function renderOrders() {
+            const tbody = document.getElementById('ordersTableBody');
+            const totalCount = document.getElementById('totalOrdersCount');
+            const badge = document.getElementById('pendingOrderBadge');
+            const unreadTag = document.getElementById('unreadAlertTag');
+
+            const unreadCount = orders.filter(o => !o.seen).length;
+            totalCount.innerText = `মোট অর্ডার: ${orders.length}`;
+            badge.innerText = unreadCount;
+
+            if (unreadCount > 0) unreadTag.classList.remove('hidden');
+            else unreadTag.classList.add('hidden');
+
+            if (orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-6 text-slate-500">এখনো কোন কাস্টমার পেমেন্ট বা Transaction ID আসেনি।</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = orders.map(order => `
+                <tr class="${!order.seen ? 'bg-ff-red/10 border-l-4 border-l-ff-red' : 'hover:bg-slate-800/50'} transition">
+                    <td class="p-3 text-[11px] text-slate-400 whitespace-nowrap">${order.time}</td>
+                    <td class="p-3 font-mono font-bold text-ff-cyan">${order.uid}</td>
+                    <td class="p-3"><div class="font-semibold text-white">${order.items}</div>${order.note ? `<div class="text-[10px] text-slate-400">Note: ${order.note}</div>` : ''}</td>
+                    <td class="p-3 whitespace-nowrap"><span class="${order.method === 'bKash' ? 'text-pink-400' : 'text-orange-400'} font-bold">${order.method}</span><span class="block text-emerald-400 font-extrabold">৳ ${order.amount}</span></td>
+                    <td class="p-3 whitespace-nowrap">
+                        <div class="flex items-center gap-2">
+                            <span class="bg-slate-950 border border-slate-700 px-2.5 py-1 rounded font-mono font-bold text-ff-gold">${order.trxId}</span>
+                            <button onclick="verifyTransaction('${order.id}')" 
+                                    class="${order.trxVerified ? 'bg-cyan-600 text-white' : 'bg-cyan-600/20 hover:bg-cyan-600 text-cyan-400 hover:text-white'} px-2.5 py-1 rounded transition font-bold" 
+                                    title="TrxID সঠিক ও পেমেন্ট ভেরিফাই করুন">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="p-3 whitespace-nowrap">
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'Completed' ? 'bg-emerald-500/20 text-emerald-400' : order.trxVerified ? 'bg-cyan-500/20 text-cyan-400' : 'bg-amber-500/20 text-amber-400'}">
+                            ${order.status === 'Completed' ? 'Delivered' : order.trxVerified ? 'Payment Verified' : order.status}
+                        </span>
+                    </td>
+                    <td class="p-3 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="completeOrderDelivery('${order.id}')" 
+                                    class="${order.status === 'Completed' ? 'bg-emerald-600 text-white' : 'bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white'} px-2.5 py-1 rounded transition font-bold" 
+                                    title="অর্ডার ডেলিভারি সম্পন্ন করুন (Send Final Notice)">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button onclick="updateOrderStatus('${order.id}', 'Rejected')" class="bg-amber-600/20 hover:bg-amber-600 text-amber-400 hover:text-white px-2 py-1 rounded" title="Reject"><i class="fas fa-ban"></i></button>
+                            <button onclick="deleteOrder('${order.id}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white px-2 py-1 rounded" title="Delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // First Tick Mark (Beside TrxID): Verify Payment & Send Notice to Customer
+        function verifyTransaction(id) {
+            let ord = orders.find(o => o.id === id);
+            if (ord) {
+                ord.trxVerified = true;
+                ord.seen = true;
+                ord.latestMsg = "আপনার Transaction ID টি সঠিক আছে এবং পেমেন্ট হয়েছে, কিছুক্ষণ অপেক্ষা করুন।";
+                localStorage.setItem('ff_orders', JSON.stringify(orders));
+                renderOrders();
+                showNotification("কাস্টমারকে পেমেন্ট কনফার্মেশন নোটিফিকেশন পাঠানো হয়েছে!");
+            }
+        }
+
+        // Last Tick Mark (Action column): Product Sent to Free Fire Account
+        function completeOrderDelivery(id) {
+            let ord = orders.find(o => o.id === id);
+            if (ord) {
+                ord.status = 'Completed';
+                ord.trxVerified = true;
+                ord.seen = true;
+                ord.latestMsg = "আপনার অর্ডার করা প্রোডাক্টটি আপনার Free Fire একাউন্টে চলে গেছে!";
+                localStorage.setItem('ff_orders', JSON.stringify(orders));
+                renderOrders();
+                showNotification("কাস্টমারকে ডেলিভারি সম্পন্ন হওয়ার নোটিশ পাঠানো হয়েছে!");
+            }
+        }
+
+        function updateOrderStatus(id, status) {
+            let ord = orders.find(o => o.id === id);
+            if (ord) { ord.status = status; ord.seen = true; localStorage.setItem('ff_orders', JSON.stringify(orders)); renderOrders(); }
+        }
+
+        function deleteOrder(id) {
+            if (confirm("অর্ডারটি মুছে ফেলতে চান?")) {
+                orders = orders.filter(o => o.id !== id);
+                localStorage.setItem('ff_orders', JSON.stringify(orders));
+                renderOrders();
+            }
+        }
+
+        function markAllOrdersSeen() {
+            orders = orders.map(o => ({ ...o, seen: true }));
+            localStorage.setItem('ff_orders', JSON.stringify(orders));
+            renderOrders();
+        }
+
+        function clearCompletedOrders() {
+            if (confirm("সব অর্ডার হিস্ট্রি ক্লিয়ার করতে চান?")) {
+                orders = [];
+                localStorage.setItem('ff_orders', JSON.stringify(orders));
+                renderOrders();
+            }
+        }
+
+        function scrollToOrders() {
+            markAllOrdersSeen();
+            document.getElementById('ordersSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderAdminProducts() {
+            const tbody = document.getElementById('adminTableBody');
+            document.getElementById('adminProductCount').innerText = `মোট ${products.length} টি`;
+            tbody.innerHTML = products.map(item => `
+                <tr class="hover:bg-slate-800/50 transition">
+                    <td class="p-3"><img src="${item.image}" class="w-10 h-10 object-cover rounded-md border border-slate-700"></td>
+                    <td class="p-3 font-semibold text-white">${item.name}</td>
+                    <td class="p-3"><span class="bg-slate-800 text-ff-cyan px-2 py-0.5 rounded text-[10px]">${item.category}</span></td>
+                    <td class="p-3 font-bold text-ff-gold">৳ ${item.price}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="deleteProduct('${item.id}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 p-1.5 rounded"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function previewSelectedImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            document.getElementById('fileSelectLabel').innerText = file.name;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxDim = 500;
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                        else { w = Math.round(w * maxDim / h); h = maxDim; }
+                    }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById('prodImageBase64').value = compressedDataUrl;
+                    document.getElementById('imagePreviewImg').src = compressedDataUrl;
+                    document.getElementById('imagePreviewBox').classList.remove('hidden');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            const name = document.getElementById('prodName').value.trim();
+            const price = parseFloat(document.getElementById('prodPrice').value);
+            const oldPrice = parseFloat(document.getElementById('prodOldPrice').value) || null;
+            const category = document.getElementById('prodCategory').value;
+            const image = document.getElementById('prodImageBase64').value;
+            const desc = document.getElementById('prodDesc').value.trim();
+
+            if (!image) {
+                alert("দয়া করে গ্যালারি থেকে একটি ছবি বাছাই করুন!");
+                return;
+            }
+
+            products.unshift({ id: 'p_' + Date.now(), name, price, oldPrice, category, image, desc });
+            localStorage.setItem('ff_products', JSON.stringify(products));
+            document.getElementById('productForm').reset();
+            document.getElementById('prodImageBase64').value = '';
+            document.getElementById('imagePreviewBox').classList.add('hidden');
+            document.getElementById('fileSelectLabel').innerText = 'গ্যালারি থেকে ছবি বাছাই করুন (Choose Image)';
+            renderAdminProducts();
+            showNotification("নতুন প্রোডাক্ট যোগ করা হয়েছে!");
+        }
+
+        function deleteProduct(id) {
+            if (confirm("প্রোডাক্ট ডিলিট করতে চান?")) {
+                products = products.filter(p => p.id !== id);
+                localStorage.setItem('ff_products', JSON.stringify(products));
+                renderAdminProducts();
+            }
+        }
+
+        function showNotification(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-5 right-5 z-50 bg-emerald-600 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-2xl flex items-center gap-2';
+            toast.innerHTML = `<i class="fas fa-bell"></i> ${msg}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
+    </script>
+</body>
+</html>
