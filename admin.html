@@ -39,24 +39,6 @@
         ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
     </style>
 </head>
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyD-ogpUVBln-gPo_VnhtsGDdZcLh_HzU28",
-    authDomain: "ff-gift-center.firebaseapp.com",
-    databaseURL: "https://ff-gift-center-default-rtdb.firebaseio.com",
-    projectId: "ff-gift-center",
-    storageBucket: "ff-gift-center.appspot.com",
-    messagingSenderId: "172774289094",
-    appId: "1:172774289094:web:8380d53eeb54ebf1c31c7",
-    measurementId: "G-SM7FYL33CL"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-</script>
 <body class="text-slate-100 antialiased flex flex-col min-h-screen">
 
     <!-- ADMIN LOGIN GATE OVERLAY -->
@@ -666,5 +648,23 @@
             setTimeout(() => toast.remove(), 4000);
         }
     </script>
+    <script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD-ogpUVBln-gPo_VnhtsGDdZcLh_HzU28",
+    authDomain: "ff-gift-center.firebaseapp.com",
+    databaseURL: "https://ff-gift-center-default-rtdb.firebaseio.com",
+    projectId: "ff-gift-center",
+    storageBucket: "ff-gift-center.appspot.com",
+    messagingSenderId: "172774289094",
+    appId: "1:172774289094:web:8380d53eeb54ebf1c31c7",
+    measurementId: "G-SM7FYL33CL"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+</script>
 </body>
 </html>
