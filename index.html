@@ -394,13 +394,24 @@
     <script>
         const initialProducts = [];
 
+        // Clear any pre-loaded or cached default products by both ID and Name
         let savedProducts = JSON.parse(localStorage.getItem('ff_products'));
-        if (savedProducts) {
+        if (Array.isArray(savedProducts)) {
             const defaultIds = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
-            savedProducts = savedProducts.filter(p => !defaultIds.includes(p.id));
+            const defaultNames = [
+                'LOL Emote (লোল ইমোট)',
+                'Flowers of Love Emote',
+                'Hip Hop Bundle',
+                'Sakura Bundle',
+                'Bunny Backpack 3D',
+                'Flame Dragon Pet',
+                'Black Jersey Shirt',
+                'Angelical Pant'
+            ];
+            savedProducts = savedProducts.filter(p => !defaultIds.includes(p.id) && !defaultNames.includes(p.name));
             localStorage.setItem('ff_products', JSON.stringify(savedProducts));
         }
-        let products = savedProducts || initialProducts;
+        let products = Array.isArray(savedProducts) ? savedProducts : [];
         let cart = JSON.parse(localStorage.getItem('ff_cart')) || [];
         let currentCategory = 'all';
         let lastKnownNotifSignature = '';
@@ -456,7 +467,9 @@
             
             window.addEventListener('storage', function(e) {
                 if (e.key === 'ff_products') {
-                    products = JSON.parse(e.newValue) || [];
+                    const defaultIds = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
+                    const incoming = JSON.parse(e.newValue) || [];
+                    products = incoming.filter(p => !defaultIds.includes(p.id));
                     renderCustomerProducts();
                 }
                 if (e.key === 'ff_flash_sale') {
