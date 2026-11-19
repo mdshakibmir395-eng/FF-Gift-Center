@@ -392,18 +392,15 @@
     </footer>
 
     <script>
-        const initialProducts = [
-            { id: "p1", name: "LOL Emote (লোল ইমোট)", price: 199, oldPrice: 399, category: "emote", image: "https://placehold.co/400x400/ff4655/ffffff?text=LOL+Emote", desc: "ফ্রি ফায়ারের সবচেয়ে জনপ্রিয় লোল ইমোট।" },
-            { id: "p2", name: "Flowers of Love Emote", price: 299, oldPrice: 599, category: "emote", image: "https://placehold.co/400x400/ffb400/0f172a?text=Flower+Emote", desc: "গোলাপ ফুল দেওয়ার জনপ্রিয় রোমান্টিক ইমোট।" },
-            { id: "p3", name: "Hip Hop Bundle", price: 899, oldPrice: 1599, category: "dress", image: "https://placehold.co/400x400/a855f7/ffffff?text=HipHop+Bundle", desc: "সিজন ২ এর অতি দুর্লভ ও জনপ্রিয় হিপ হপ বান্ডেল।" },
-            { id: "p4", name: "Sakura Bundle", price: 999, oldPrice: 1999, category: "dress", image: "https://placehold.co/400x400/00f0ff/0f172a?text=Sakura+Bundle", desc: "সিজন ১ সাকুরা বান্ডেল ড্রেস।" },
-            { id: "p5", name: "Bunny Backpack 3D", price: 150, oldPrice: 300, category: "bag", image: "https://placehold.co/400x400/38bdf8/0f172a?text=Bunny+Bag", desc: "লেভেল ৩ রেয়ার খরগোশ ব্যাগ স্কিন।" },
-            { id: "p6", name: "Flame Dragon Pet", price: 250, oldPrice: 500, category: "pet", image: "https://placehold.co/400x400/f97316/ffffff?text=Dragon+Pet", desc: "ফায়ার ড্রাগন পেট।" },
-            { id: "p7", name: "Black Jersey Shirt", price: 180, oldPrice: 350, category: "shirt", image: "https://placehold.co/400x400/334155/ffffff?text=Black+Jersey", desc: "কুল ও স্টাইলিশ অল-ব্ল্যাক জার্সি।" },
-            { id: "p8", name: "Angelical Pant", price: 499, oldPrice: 999, category: "pant", image: "https://placehold.co/400x400/818cf8/0f172a?text=Angelical+Pant", desc: "কিংবদন্তি এঞ্জেলিক প্যান্ট।" }
-        ];
+        const initialProducts = [];
 
-        let products = JSON.parse(localStorage.getItem('ff_products')) || initialProducts;
+        let savedProducts = JSON.parse(localStorage.getItem('ff_products'));
+        if (savedProducts) {
+            const defaultIds = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
+            savedProducts = savedProducts.filter(p => !defaultIds.includes(p.id));
+            localStorage.setItem('ff_products', JSON.stringify(savedProducts));
+        }
+        let products = savedProducts || initialProducts;
         let cart = JSON.parse(localStorage.getItem('ff_cart')) || [];
         let currentCategory = 'all';
         let lastKnownNotifSignature = '';
