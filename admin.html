@@ -275,7 +275,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-300 mb-1">প্রোডাক্টের ছবি (গ্যালারি থেকে সিলেক্ট করুন) *</label>
-                        <input type="file" id="prodImageFile" accept="image/*" required onchange="previewSelectedImage(event)" class="hidden">
+                        <input type="file" id="prodImageFile" accept="image/*" onchange="previewSelectedImage(event)" class="hidden">
                         <input type="hidden" id="prodImageBase64" value="">
                         <button type="button" onclick="document.getElementById('prodImageFile').click()" class="w-full bg-slate-800 hover:bg-slate-700 text-ff-cyan text-xs font-bold py-2.5 px-3 rounded-lg border border-dashed border-slate-600 hover:border-ff-cyan transition flex items-center justify-center gap-2">
                             <i class="fas fa-images text-base"></i> <span id="fileSelectLabel">গ্যালারি থেকে ছবি বাছাই করুন (Choose Image)</span>
@@ -655,9 +655,19 @@
                     <td class="p-3"><img src="${item.image}" class="w-10 h-10 object-cover rounded-md border border-slate-700"></td>
                     <td class="p-3 font-semibold text-white">${item.name}</td>
                     <td class="p-3"><span class="bg-slate-800 text-ff-cyan px-2 py-0.5 rounded text-[10px]">${item.category}</span></td>
-                    <td class="p-3 font-bold text-ff-gold">৳ ${item.price}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="deleteProduct('${item.id}')" class="bg-red-600/20 hover:bg-red-600 text-red-400 p-1.5 rounded"><i class="fas fa-trash"></i></button>
+                    <td class="p-3 font-bold text-ff-gold">
+                        ৳ ${item.price}
+                        ${item.oldPrice ? `<span class="block text-[10px] text-slate-500 line-through font-normal">৳ ${item.oldPrice}</span>` : ''}
+                    </td>
+                    <td class="p-3 text-center whitespace-nowrap">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="editProduct('${item.id}')" title="দাম ও তথ্য এডিট করুন" class="bg-cyan-600/20 hover:bg-cyan-600 text-cyan-400 hover:text-white px-2.5 py-1.5 rounded transition font-bold flex items-center gap-1">
+                                <i class="fas fa-edit"></i> <span class="text-[11px]">এডিট</span>
+                            </button>
+                            <button onclick="deleteProduct('${item.id}')" title="ডিলিট করুন" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white p-1.5 rounded transition">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             `).join('');
@@ -693,9 +703,49 @@
             reader.readAsDataURL(file);
         };
 
+        window.editProduct = function(id) {
+            const item = products.find(p => p.id === id);
+            if (!item) return;
+
+            document.getElementById('editProductId').value = item.id;
+            document.getElementById('prodName').value = item.name || '';
+            document.getElementById('prodPrice').value = item.price || '';
+            document.getElementById('prodOldPrice').value = item.oldPrice || '';
+            document.getElementById('prodCategory').value = item.category || 'emote';
+            document.getElementById('prodImageBase64').value = item.image || '';
+            document.getElementById('prodDesc').value = item.desc || '';
+
+            if (item.image) {
+                document.getElementById('imagePreviewImg').src = item.image;
+                document.getElementById('imagePreviewBox').classList.remove('hidden');
+                document.getElementById('fileSelectLabel').innerText = 'ছবি পরিবর্তন করতে চাইলে ক্লিক করুন (ঐচ্ছিক)';
+            }
+
+            document.getElementById('formTitle').innerHTML = `<i class="fas fa-edit text-ff-cyan"></i> প্রোডাক্ট এডিট করুন (দাম ও তথ্য)`;
+            document.getElementById('submitBtn').innerText = "আপডেট করুন";
+            document.getElementById('submitBtn').className = "flex-1 bg-cyan-600 hover:bg-cyan-500 text-white py-2.5 rounded-lg font-bold text-sm transition shadow-lg";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+            document.getElementById('productForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            document.getElementById('prodPrice').focus();
+        };
+
+        window.resetForm = function() {
+            document.getElementById('productForm').reset();
+            document.getElementById('editProductId').value = '';
+            document.getElementById('prodImageBase64').value = '';
+            document.getElementById('imagePreviewBox').classList.add('hidden');
+            document.getElementById('fileSelectLabel').innerText = 'গ্যালারি থেকে ছবি বাছাই করুন (Choose Image)';
+            document.getElementById('formTitle').innerHTML = `<i class="fas fa-plus-circle text-ff-red"></i> নতুন প্রোডাক্ট ইনপুট দিন`;
+            document.getElementById('submitBtn').innerText = "সেভ করুন";
+            document.getElementById('submitBtn').className = "flex-1 bg-ff-red hover:bg-ff-darkRed text-white py-2.5 rounded-lg font-bold text-sm transition shadow-lg";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        };
+
         window.handleFormSubmit = async function(e) {
             e.preventDefault();
             const submitBtn = document.getElementById('submitBtn');
+            const editId = document.getElementById('editProductId').value.trim();
             const name = document.getElementById('prodName').value.trim();
             const price = parseFloat(document.getElementById('prodPrice').value);
             const oldPrice = parseFloat(document.getElementById('prodOldPrice').value) || null;
@@ -709,30 +759,43 @@
             }
 
             submitBtn.disabled = true;
-            submitBtn.innerText = "সেভ হচ্ছে...";
+            submitBtn.innerText = editId ? "আপডেট হচ্ছে..." : "সেভ হচ্ছে...";
 
             try {
-                const id = 'p_' + Date.now();
-                await set(ref(db, `ff_products/${id}`), {
-                    id,
-                    name,
-                    price,
-                    oldPrice,
-                    category,
-                    image,
-                    desc,
-                    createdAt: Date.now()
-                });
-                document.getElementById('productForm').reset();
-                document.getElementById('prodImageBase64').value = '';
-                document.getElementById('imagePreviewBox').classList.add('hidden');
-                document.getElementById('fileSelectLabel').innerText = 'গ্যালারি থেকে ছবি বাছাই করুন (Choose Image)';
-                showNotification("নতুন প্রোডাক্ট লাইভ শপে যোগ করা হয়েছে!");
+                if (editId) {
+                    await update(ref(db, `ff_products/${editId}`), {
+                        name,
+                        price,
+                        oldPrice,
+                        category,
+                        image,
+                        desc,
+                        updatedAt: Date.now()
+                    });
+                    resetForm();
+                    showNotification("প্রোডাক্টের দাম ও তথ্য লাইভ আপডেট হয়েছে!");
+                } else {
+                    const id = 'p_' + Date.now();
+                    await set(ref(db, `ff_products/${id}`), {
+                        id,
+                        name,
+                        price,
+                        oldPrice,
+                        category,
+                        image,
+                        desc,
+                        createdAt: Date.now()
+                    });
+                    resetForm();
+                    showNotification("নতুন প্রোডাক্ট লাইভ শপে যোগ করা হয়েছে!");
+                }
             } catch (err) {
                 alert("প্রোডাক্ট সেভ করতে সমস্যা হয়েছে: " + err.message);
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerText = "সেভ করুন";
+                if (!document.getElementById('editProductId').value) {
+                    submitBtn.innerText = "সেভ করুন";
+                }
             }
         };
 
