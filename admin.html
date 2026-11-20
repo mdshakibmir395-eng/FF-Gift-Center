@@ -57,14 +57,14 @@
                     <label class="block text-xs font-bold text-slate-300 mb-1.5">ইউজারনেম (Username)</label>
                     <div class="relative">
                         <span class="absolute left-3.5 top-2.5 text-slate-400"><i class="fas fa-user"></i></span>
-                        <input type="text" id="loginUsername" required placeholder="ইউজারনেম লিখুন" class="w-full bg-slate-800 text-slate-100 text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 focus:border-ff-gold outline-none">
+                        <input type="text" id="loginUsername" required placeholder="ইউজারনেম লিখুন " class="w-full bg-slate-800 text-slate-100 text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 focus:border-ff-gold outline-none">
                     </div>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-300 mb-1.5">পাসওয়ার্ড (Password)</label>
                     <div class="relative">
                         <span class="absolute left-3.5 top-2.5 text-slate-400"><i class="fas fa-key"></i></span>
-                        <input type="password" id="loginPassword" required placeholder="পাসওয়ার্ড লিখুন" class="w-full bg-slate-800 text-slate-100 text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 focus:border-ff-gold outline-none">
+                        <input type="password" id="loginPassword" required placeholder="পাসওয়ার্ড লিখুন " class="w-full bg-slate-800 text-slate-100 text-sm pl-10 pr-4 py-2.5 rounded-xl border border-slate-700 focus:border-ff-gold outline-none">
                     </div>
                 </div>
                 <p id="loginErrorMsg" class="hidden text-xs text-ff-red font-bold bg-ff-red/10 border border-ff-red/30 px-3 py-2 rounded-lg text-center">
@@ -113,7 +113,7 @@
                 <h1 class="text-2xl font-bold text-white flex items-center gap-2">
                     <i class="fas fa-user-shield text-ff-gold"></i> এডমিন ড্যাশবোর্ড (Live Firebase Sync)
                 </h1>
-                <p class="text-xs text-slate-400 mt-1">নম্বর পরিবর্তন, পেমেন্ট কন্ট্রোল, শপ ওপেনিং টাইম ও প্রোডাক্ট ম্যানেজমেন্ট — সবকিছু সরাসরি লাইভ সাইটে আপডেট হবে</p>
+                <p class="text-xs text-slate-400 mt-1">শপ ওপেনিং টাইম, অর্ডার ম্যানেজমেন্ট, পাসওয়ার্ড পরিবর্তন ও প্রোডাক্ট কন্ট্রোল — সবকিছু সরাসরি লাইভ সাইটে আপডেট হবে</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <button onclick="markAllOrdersSeen()" class="text-xs bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-3 py-2 rounded-lg border border-emerald-600/40 transition font-semibold">
@@ -121,59 +121,6 @@
                 </button>
             </div>
         </div>
-
-        <!-- PAYMENT, WHATSAPP & ON/OFF CONTROL SECTION -->
-        <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl">
-            <h2 class="text-lg font-bold text-white mb-4 pb-2 border-b border-slate-800 flex items-center gap-2">
-                <i class="fas fa-wallet text-ff-cyan"></i> বিকাশ, নগদ ও হোয়াটসঅ্যাপ নম্বর এবং পেমেন্ট অন/অফ কন্ট্রোল প্যানেল
-            </h2>
-            <form onsubmit="savePaymentConfig(event)" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">হোয়াটসঅ্যাপ সাপোর্ট নম্বর (WhatsApp)</label>
-                        <input type="text" id="adminWhatsapp" placeholder="যেমন: 8801340067115" class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">বিকাশ নম্বর (bKash Number)</label>
-                        <input type="text" id="adminBkashNum" placeholder="যেমন: 01907799395" class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-300 mb-1">নগদ নম্বর (Nagad Number)</label>
-                        <input type="text" id="adminNagadNum" placeholder="যেমন: 01340067115" class="w-full bg-slate-800 text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 outline-none">
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-slate-800">
-                    <div class="flex items-center justify-between bg-slate-800/60 p-3 rounded-xl border border-slate-700">
-                        <div>
-                            <span class="text-sm font-bold text-white block">বিকাশ পেমেন্ট মোড (bKash)</span>
-                            <span class="text-[11px] text-slate-400">অন থাকলে কাস্টমার বিকাশ পেমেন্ট দেখতে পাবে</span>
-                        </div>
-                        <select id="adminBkashStatus" class="bg-slate-900 text-slate-200 text-xs px-3 py-2 rounded-lg border border-slate-700 outline-none font-bold">
-                            <option value="on">চালু আছে (On)</option>
-                            <option value="off">বন্ধ আছে (Off)</option>
-                        </select>
-                    </div>
-
-                    <div class="flex items-center justify-between bg-slate-800/60 p-3 rounded-xl border border-slate-700">
-                        <div>
-                            <span class="text-sm font-bold text-white block">নগদ পেমেন্ট মোড (Nagad)</span>
-                            <span class="text-[11px] text-slate-400">অন থাকলে কাস্টমার নগদ পেমেন্ট দেখতে পাবে</span>
-                        </div>
-                        <select id="adminNagadStatus" class="bg-slate-900 text-slate-200 text-xs px-3 py-2 rounded-lg border border-slate-700 outline-none font-bold">
-                            <option value="on">চালু আছে (On)</option>
-                            <option value="off">বন্ধ আছে (Off)</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="pt-2">
-                    <button type="submit" class="w-full bg-gradient-to-r from-ff-cyan to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-slate-950 font-extrabold py-3 rounded-xl text-sm transition shadow-lg flex items-center justify-center gap-2">
-                        <i class="fas fa-save"></i> বিকাশ, নগদ ও হোয়াটসঅ্যাপ সেটিংস লাইভ সেভ করুন
-                    </button>
-                </div>
-            </form>
-        </section>
 
         <!-- SHOP OPENING TIME & ON/OFF CONTROL SECTION -->
         <section class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-xl">
@@ -200,6 +147,9 @@
                     </button>
                 </div>
             </div>
+            <p class="text-[11px] text-slate-400 mt-3">
+                <i class="fas fa-info-circle text-ff-gold mr-1"></i> নোট: "অটোমেটিক টাইম" সিলেক্ট থাকলে প্রতিদিন রাত ১০:০০ টা থেকে রাত ৩:০০ টা পর্যন্ত কাস্টমার প্যানেল অটোমেটিক খোলা থাকবে এবং বাকি সময় বন্ধ থাকবে। এছাড়া আপনি যেকোনো সময় ম্যানুয়ালি অন বা অফ করতে পারবেন।
+            </p>
         </section>
 
         <!-- ADMIN USERNAME & PASSWORD CHANGE SECTION -->
@@ -374,6 +324,7 @@
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
         import { getDatabase, ref, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyB-oqpOV0lm-gPb_WhkTkGd3zLh_HzU3Z8",
             authDomain: "ff-gift-center.firebaseapp.com",
@@ -385,6 +336,7 @@
             measurementId: "G-SN7FYLJ3CL"
         };
 
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const analytics = getAnalytics(app);
         const db = getDatabase(app);
@@ -409,10 +361,12 @@
             }
         }
 
+        // Monitor Firebase connection
         onValue(ref(db, ".info/connected"), (snap) => {
             updateConnectionBadge(snap.val() === true);
         });
 
+        // Listen to Admin Credentials in Firebase
         onValue(ref(db, 'ff_admin_creds'), (snapshot) => {
             const data = snapshot.val();
             if (data && data.username && data.password) {
@@ -424,6 +378,7 @@
             }
         });
 
+        // Listen to Shop Status in Firebase
         onValue(ref(db, 'ff_shop_status'), (snapshot) => {
             const data = snapshot.val();
             if (data && data.mode) {
@@ -433,6 +388,7 @@
             updateAdminShopBadge();
         });
 
+        // Listen to Flash Sale in Firebase
         onValue(ref(db, 'ff_flash_sale'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -443,51 +399,7 @@
             }
         });
 
-        onValue(ref(db, 'ff_payment_config'), (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                document.getElementById('adminWhatsapp').value = data.whatsapp || '8801340067115';
-                document.getElementById('adminBkashNum').value = data.bkashNum || '01907799395';
-                document.getElementById('adminNagadNum').value = data.nagadNum || '01340067115';
-                document.getElementById('adminBkashStatus').value = data.bkashStatus || 'on';
-                document.getElementById('adminNagadStatus').value = data.nagadStatus || 'on';
-            } else {
-                document.getElementById('adminWhatsapp').value = '8801340067115';
-                document.getElementById('adminBkashNum').value = '01907799395';
-                document.getElementById('adminNagadNum').value = '01340067115';
-                document.getElementById('adminBkashStatus').value = 'on';
-                document.getElementById('adminNagadStatus').value = 'on';
-            }
-        });
-
-        window.savePaymentConfig = async function(e) {
-            e.preventDefault();
-            const whatsapp = document.getElementById('adminWhatsapp').value.trim();
-            const bkashNum = document.getElementById('adminBkashNum').value.trim();
-            const nagadNum = document.getElementById('adminNagadNum').value.trim();
-            const bkashStatus = document.getElementById('adminBkashStatus').value;
-            const nagadStatus = document.getElementById('adminNagadStatus').value;
-
-            if (bkashStatus === 'off' && nagadStatus === 'off') {
-                alert("সতর্কতা: বিকাশ এবং নগদ উভয় পেমেন্ট মোড একসাথে বন্ধ রাখতে পারবেন না। কমপক্ষে একটি চালু রাখুন!");
-                return;
-            }
-
-            try {
-                await set(ref(db, 'ff_payment_config'), {
-                    whatsapp,
-                    bkashNum,
-                    nagadNum,
-                    bkashStatus,
-                    nagadStatus,
-                    updatedAt: Date.now()
-                });
-                showNotification("পেমেন্ট ও হোয়াটসঅ্যাপ সেটিংস লাইভ আপডেট হয়েছে!");
-            } catch (err) {
-                alert("সেভ করতে সমস্যা হয়েছে: " + err.message);
-            }
-        };
-
+        // Listen to Products in Firebase
         onValue(ref(db, 'ff_products'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -498,6 +410,7 @@
             renderAdminProducts();
         });
 
+        // Listen to Orders in Firebase
         onValue(ref(db, 'ff_orders'), (snapshot) => {
             const data = snapshot.val();
             if (data) {
@@ -518,6 +431,7 @@
             renderOrders();
         });
 
+        // Auth Functions
         window.checkAuthStatus = function() {
             const isLoggedIn = sessionStorage.getItem('ff_admin_logged_in') === 'true';
             const overlay = document.getElementById('adminLoginOverlay');
@@ -572,6 +486,7 @@
             }
         };
 
+        // Shop Opening Time Control
         function isShopCurrentlyOpen() {
             if (shopConfig.mode === 'open') return true;
             if (shopConfig.mode === 'closed') return false;
@@ -604,6 +519,7 @@
 
         setInterval(updateAdminShopBadge, 5000);
 
+        // Flash Sale Control
         window.saveFlashSaleConfig = async function() {
             const status = document.getElementById('flashStatus').value;
             const hours = parseInt(document.getElementById('flashHours').value) || 0;
@@ -617,6 +533,7 @@
             }
         };
 
+        // Orders Management
         function renderOrders() {
             const tbody = document.getElementById('ordersTableBody');
             const totalCount = document.getElementById('totalOrdersCount');
@@ -660,7 +577,7 @@
                         <div class="flex items-center justify-center gap-1.5">
                             <button onclick="completeOrderDelivery('${order.id}')" 
                                     class="${order.status === 'Completed' ? 'bg-emerald-600 text-white' : 'bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white'} px-2.5 py-1 rounded transition font-bold" 
-                                    title="অর্ডার ডেলিভারি সম্পন্ন করুন">
+                                    title="অর্ডার ডেলিভারি সম্পন্ন করুন (Send Final Notice)">
                                 <i class="fas fa-check"></i>
                             </button>
                             <button onclick="updateOrderStatus('${order.id}', 'Rejected')" class="bg-amber-600/20 hover:bg-amber-600 text-amber-400 hover:text-white px-2 py-1 rounded" title="Reject"><i class="fas fa-ban"></i></button>
@@ -725,6 +642,7 @@
             document.getElementById('ordersSection').scrollIntoView({ behavior: 'smooth' });
         };
 
+        // Products Management
         function renderAdminProducts() {
             const tbody = document.getElementById('adminTableBody');
             document.getElementById('adminProductCount').innerText = `মোট ${products.length} টি`;
@@ -803,7 +721,7 @@
                 document.getElementById('fileSelectLabel').innerText = 'ছবি পরিবর্তন করতে চাইলে ক্লিক করুন (ঐচ্ছিক)';
             }
 
-            document.getElementById('formTitle').innerHTML = `<i class="fas fa-edit text-ff-cyan"></i> প্রোডাক্ট এডিট করুন`;
+            document.getElementById('formTitle').innerHTML = `<i class="fas fa-edit text-ff-cyan"></i> প্রোডাক্ট এডিট করুন (দাম ও তথ্য)`;
             document.getElementById('submitBtn').innerText = "আপডেট করুন";
             document.getElementById('submitBtn').className = "flex-1 bg-cyan-600 hover:bg-cyan-500 text-white py-2.5 rounded-lg font-bold text-sm transition shadow-lg";
             document.getElementById('cancelEditBtn').classList.remove('hidden');
@@ -896,6 +814,7 @@
             setTimeout(() => toast.remove(), 4000);
         }
 
+        // Initial auth check
         window.checkAuthStatus();
     </script>
 </body>
