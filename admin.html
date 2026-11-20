@@ -82,7 +82,9 @@
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <span class="bg-gradient-to-r from-ff-gold to-ff-red text-slate-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded tracking-wide uppercase shadow">Admin Panel</span>
-                <span class="hidden sm:inline text-slate-400">FF Gift Center - প্রোডাক্ট, পেমেন্ট ও শপ টাইম কন্ট্রোল</span>
+                <span id="firebaseStatusBadge" class="text-[10px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full font-bold">
+                    <i class="fas fa-sync fa-spin mr-1"></i> Firebase কানেক্ট হচ্ছে...
+                </span>
             </div>
             
             <div class="flex items-center gap-2 sm:gap-3">
@@ -92,7 +94,7 @@
                     <span id="pendingOrderBadge" class="bg-ff-red text-white text-[10px] font-extrabold px-1.5 py-0.2 rounded-full">0</span>
                 </button>
 
-                <a href="ff-gift-center-v6.html" target="_blank" class="bg-ff-red hover:bg-ff-darkRed text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow">
+                <a href="index.html" target="_blank" class="bg-ff-red hover:bg-ff-darkRed text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow">
                     <i class="fas fa-external-link-alt"></i> গ্রাহক শপ খুলুন
                 </a>
 
@@ -109,9 +111,9 @@
         <div class="flex flex-wrap items-center justify-between gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-xl">
             <div>
                 <h1 class="text-2xl font-bold text-white flex items-center gap-2">
-                    <i class="fas fa-user-shield text-ff-gold"></i> এডমিন ড্যাশবোর্ড
+                    <i class="fas fa-user-shield text-ff-gold"></i> এডমিন ড্যাশবোর্ড (Live Firebase Sync)
                 </h1>
-                <p class="text-xs text-slate-400 mt-1">শপ ওপেনিং টাইম, অর্ডার ম্যানেজমেন্ট, পাসওয়ার্ড পরিবর্তন ও প্রোডাক্ট কন্ট্রোল</p>
+                <p class="text-xs text-slate-400 mt-1">শপ ওপেনিং টাইম, অর্ডার ম্যানেজমেন্ট, পাসওয়ার্ড পরিবর্তন ও প্রোডাক্ট কন্ট্রোল — সবকিছু সরাসরি লাইভ সাইটে আপডেট হবে</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <button onclick="markAllOrdersSeen()" class="text-xs bg-emerald-600/20 hover:bg-emerald-600 text-emerald-400 hover:text-white px-3 py-2 rounded-lg border border-emerald-600/40 transition font-semibold">
@@ -264,11 +266,11 @@
                             <option value="pet">পেট (Pet)</option>
                             <option value="shirt">শার্ট (Shirt)</option>
                             <option value="pant">প্যান্ট (Pant)</option>
-                            <option value="glowall">গ্লোয়াল(glowall)</option>
-                            <option value="faceprint">ফেসপ্রিন্ট(faceprint)</option>
-                            <option value="vehicles">vehicles</option>
-                            <option value="weapon">weapon</option>
-                            <option value="others">others</option>
+                            <option value="glowall">গ্লোয়াল (Glowall)</option>
+                            <option value="faceprint">ফেসপ্রিন্ট (Faceprint)</option>
+                            <option value="vehicles">গাড়ি (Vehicles)</option>
+                            <option value="weapon">গান (Weapon)</option>
+                            <option value="others">অন্যান্য (Others)</option>
                         </select>
                     </div>
                     <div>
@@ -316,56 +318,159 @@
         </div>
     </main>
 
-    <script>
-        let products = JSON.parse(localStorage.getItem('ff_products')) || [];
-        let orders = JSON.parse(localStorage.getItem('ff_orders')) || [];
+    <!-- Firebase SDK (Modular CDN) & Admin Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-analytics.js";
+        import { getDatabase, ref, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
-        // Default credentials: username = admin, password = admin
-        function getAdminCreds() {
-            return JSON.parse(localStorage.getItem('ff_admin_creds')) || { username: 'admin', password: 'admin' };
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB-oqpOV0lm-gPb_WhkTkGd3zLh_HzU3Z8",
+            authDomain: "ff-gift-center.firebaseapp.com",
+            databaseURL: "https://ff-gift-center-default-rtdb.firebaseio.com",
+            projectId: "ff-gift-center",
+            storageBucket: "ff-gift-center.firebasestorage.app",
+            messagingSenderId: "172774289094",
+            appId: "1:172774289094:web:838dc535ee545ebf1c31c7",
+            measurementId: "G-SN7FYLJ3CL"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getDatabase(app);
+
+        let products = [];
+        let orders = [];
+        let shopConfig = { mode: 'auto' };
+        let flashConfig = { status: 'on', hours: 8, minutes: 42, seconds: 19, updatedAt: Date.now() };
+        let adminCreds = { username: 'admin', password: 'admin' };
+        let initialOrdersLoaded = false;
+        let knownOrderIds = new Set();
+
+        function updateConnectionBadge(connected) {
+            const badge = document.getElementById('firebaseStatusBadge');
+            if (!badge) return;
+            if (connected) {
+                badge.className = "text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold";
+                badge.innerHTML = `<i class="fas fa-circle text-[8px] mr-1"></i> Firebase লাইভ কানেক্টেড`;
+            } else {
+                badge.className = "text-[10px] bg-red-500/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full font-bold";
+                badge.innerHTML = `<i class="fas fa-exclamation-triangle mr-1"></i> সংযোগ বিচ্ছিন্ন`;
+            }
         }
 
-        function checkAuthStatus() {
+        // Monitor Firebase connection
+        onValue(ref(db, ".info/connected"), (snap) => {
+            updateConnectionBadge(snap.val() === true);
+        });
+
+        // Listen to Admin Credentials in Firebase
+        onValue(ref(db, 'ff_admin_creds'), (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.username && data.password) {
+                adminCreds = data;
+            }
+            if (sessionStorage.getItem('ff_admin_logged_in') === 'true') {
+                document.getElementById('newAdminUser').value = adminCreds.username;
+                document.getElementById('newAdminPass').value = adminCreds.password;
+            }
+        });
+
+        // Listen to Shop Status in Firebase
+        onValue(ref(db, 'ff_shop_status'), (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.mode) {
+                shopConfig = data;
+            }
+            document.getElementById('shopControlMode').value = shopConfig.mode;
+            updateAdminShopBadge();
+        });
+
+        // Listen to Flash Sale in Firebase
+        onValue(ref(db, 'ff_flash_sale'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                flashConfig = data;
+                document.getElementById('flashStatus').value = flashConfig.status || 'on';
+                document.getElementById('flashHours').value = flashConfig.hours ?? 8;
+                document.getElementById('flashMinutes').value = flashConfig.minutes ?? 42;
+            }
+        });
+
+        // Listen to Products in Firebase
+        onValue(ref(db, 'ff_products'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                products = Object.values(data).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            } else {
+                products = [];
+            }
+            renderAdminProducts();
+        });
+
+        // Listen to Orders in Firebase
+        onValue(ref(db, 'ff_orders'), (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                orders = Object.values(data).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            } else {
+                orders = [];
+            }
+
+            if (initialOrdersLoaded) {
+                for (const ord of orders) {
+                    if (!knownOrderIds.has(ord.id)) {
+                        showNotification(`নতুন পেমেন্ট! TrxID: ${ord.trxId} (${ord.amount} BDT)`);
+                    }
+                }
+            }
+            knownOrderIds = new Set(orders.map(o => o.id));
+            initialOrdersLoaded = true;
+            renderOrders();
+        });
+
+        // Auth Functions
+        window.checkAuthStatus = function() {
             const isLoggedIn = sessionStorage.getItem('ff_admin_logged_in') === 'true';
             const overlay = document.getElementById('adminLoginOverlay');
             const mainContent = document.getElementById('adminMainContent');
             if (isLoggedIn) {
                 overlay.classList.add('hidden');
                 mainContent.classList.remove('hidden');
-                const creds = getAdminCreds();
-                document.getElementById('newAdminUser').value = creds.username;
-                document.getElementById('newAdminPass').value = creds.password;
+                document.getElementById('newAdminUser').value = adminCreds.username;
+                document.getElementById('newAdminPass').value = adminCreds.password;
             } else {
                 overlay.classList.remove('hidden');
                 mainContent.classList.add('hidden');
             }
-        }
+        };
 
-        function handleAdminLogin(e) {
+        window.handleAdminLogin = function(e) {
             e.preventDefault();
             const user = document.getElementById('loginUsername').value.trim();
             const pass = document.getElementById('loginPassword').value.trim();
-            const creds = getAdminCreds();
             const errEl = document.getElementById('loginErrorMsg');
 
-            if (user.toLowerCase() === creds.username.toLowerCase() && pass === creds.password) {
+            if (user.toLowerCase() === adminCreds.username.toLowerCase() && pass === adminCreds.password) {
                 sessionStorage.setItem('ff_admin_logged_in', 'true');
                 errEl.classList.add('hidden');
-                checkAuthStatus();
+                window.checkAuthStatus();
                 showNotification("সফলভাবে এডমিন প্যানেলে লগইন হয়েছে!");
             } else {
                 errEl.classList.remove('hidden');
             }
-        }
+        };
 
-        function handleAdminLogout() {
+        window.handleAdminLogout = function() {
             sessionStorage.removeItem('ff_admin_logged_in');
             document.getElementById('loginUsername').value = '';
             document.getElementById('loginPassword').value = '';
-            checkAuthStatus();
-        }
+            window.checkAuthStatus();
+        };
 
-        function updateAdminCredentials(e) {
+        window.updateAdminCredentials = async function(e) {
             e.preventDefault();
             const newUser = document.getElementById('newAdminUser').value.trim();
             const newPass = document.getElementById('newAdminPass').value.trim();
@@ -373,34 +478,35 @@
                 alert("ইউজারনেম এবং পাসওয়ার্ড উভয়ই লিখুন!");
                 return;
             }
-            localStorage.setItem('ff_admin_creds', JSON.stringify({ username: newUser, password: newPass }));
-            showNotification("এডমিন ইউজারনেম ও পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে!");
-        }
+            try {
+                await set(ref(db, 'ff_admin_creds'), { username: newUser, password: newPass });
+                showNotification("এডমিন ইউজারনেম ও পাসওয়ার্ড Firebase-এ আপডেট হয়েছে!");
+            } catch (err) {
+                alert("সেভ করতে সমস্যা হয়েছে: " + err.message);
+            }
+        };
 
-        // Shop Opening Time Control Logic
+        // Shop Opening Time Control
         function isShopCurrentlyOpen() {
-            let shopConfig = JSON.parse(localStorage.getItem('ff_shop_status')) || { mode: 'auto' };
             if (shopConfig.mode === 'open') return true;
             if (shopConfig.mode === 'closed') return false;
             const hour = new Date().getHours();
             return (hour >= 22 || hour < 3);
         }
 
-        function loadShopStatusConfig() {
-            let shopConfig = JSON.parse(localStorage.getItem('ff_shop_status')) || { mode: 'auto' };
-            document.getElementById('shopControlMode').value = shopConfig.mode;
-            updateAdminShopBadge();
-        }
-
-        function saveShopStatusConfig() {
+        window.saveShopStatusConfig = async function() {
             const mode = document.getElementById('shopControlMode').value;
-            localStorage.setItem('ff_shop_status', JSON.stringify({ mode }));
-            updateAdminShopBadge();
-            showNotification("শপ ওপেনিং টাইম স্ট্যাটাস আপডেট করা হয়েছে!");
-        }
+            try {
+                await set(ref(db, 'ff_shop_status'), { mode });
+                showNotification("শপ ওপেনিং টাইম স্ট্যাটাস লাইভ আপডেট হয়েছে!");
+            } catch (err) {
+                alert("সেভ করতে সমস্যা হয়েছে: " + err.message);
+            }
+        };
 
         function updateAdminShopBadge() {
             const badge = document.getElementById('adminCurrentShopBadge');
+            if (!badge) return;
             const isOpen = isShopCurrentlyOpen();
             if (isOpen) {
                 badge.className = "text-xs font-extrabold px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40";
@@ -411,44 +517,23 @@
             }
         }
 
-        window.onload = function() {
-            checkAuthStatus();
-            loadShopStatusConfig();
-            renderAdminProducts();
-            renderOrders();
-            loadFlashSaleConfig();
+        setInterval(updateAdminShopBadge, 5000);
 
-            setInterval(() => {
-                updateAdminShopBadge();
-                let latestOrders = JSON.parse(localStorage.getItem('ff_orders')) || [];
-                if (latestOrders.length !== orders.length) {
-                    let isNew = latestOrders.length > orders.length;
-                    orders = latestOrders;
-                    renderOrders();
-                    if (isNew && orders[0]) {
-                        showNotification(`নতুন পেমেন্ট! TrxID: ${orders[0].trxId} (${orders[0].amount} BDT)`);
-                    }
-                }
-            }, 2500);
+        // Flash Sale Control
+        window.saveFlashSaleConfig = async function() {
+            const status = document.getElementById('flashStatus').value;
+            const hours = parseInt(document.getElementById('flashHours').value) || 0;
+            const minutes = parseInt(document.getElementById('flashMinutes').value) || 0;
+            const config = { status, hours, minutes, seconds: 0, updatedAt: Date.now() };
+            try {
+                await set(ref(db, 'ff_flash_sale'), config);
+                showNotification("ফ্ল্যাশ সেল সেটিংস লাইভ আপডেট হয়েছে!");
+            } catch (err) {
+                alert("সেভ করতে সমস্যা হয়েছে: " + err.message);
+            }
         };
 
-        function loadFlashSaleConfig() {
-            let config = JSON.parse(localStorage.getItem('ff_flash_sale')) || { status: 'on', hours: 8, minutes: 42, seconds: 19 };
-            document.getElementById('flashStatus').value = config.status;
-            document.getElementById('flashHours').value = config.hours;
-            document.getElementById('flashMinutes').value = config.minutes;
-        }
-
-        function saveFlashSaleConfig() {
-            let status = document.getElementById('flashStatus').value;
-            let hours = parseInt(document.getElementById('flashHours').value) || 0;
-            let minutes = parseInt(document.getElementById('flashMinutes').value) || 0;
-
-            let config = { status, hours, minutes, seconds: 0 };
-            localStorage.setItem('ff_flash_sale', JSON.stringify(config));
-            showNotification("ফ্ল্যাশ সেল সেটিংস সফলভাবে আপডেট করা হয়েছে!");
-        }
-
+        // Orders Management
         function renderOrders() {
             const tbody = document.getElementById('ordersTableBody');
             const totalCount = document.getElementById('totalOrdersCount');
@@ -469,7 +554,7 @@
 
             tbody.innerHTML = orders.map(order => `
                 <tr class="${!order.seen ? 'bg-ff-red/10 border-l-4 border-l-ff-red' : 'hover:bg-slate-800/50'} transition">
-                    <td class="p-3 text-[11px] text-slate-400 whitespace-nowrap">${order.time}</td>
+                    <td class="p-3 text-[11px] text-slate-400 whitespace-nowrap">${order.time || ''}</td>
                     <td class="p-3 font-mono font-bold text-ff-cyan">${order.uid}</td>
                     <td class="p-3"><div class="font-semibold text-white">${order.items}</div>${order.note ? `<div class="text-[10px] text-slate-400">Note: ${order.note}</div>` : ''}</td>
                     <td class="p-3 whitespace-nowrap"><span class="${order.method === 'bKash' ? 'text-pink-400' : 'text-orange-400'} font-bold">${order.method}</span><span class="block text-emerald-400 font-extrabold">৳ ${order.amount}</span></td>
@@ -484,8 +569,8 @@
                         </div>
                     </td>
                     <td class="p-3 whitespace-nowrap">
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'Completed' ? 'bg-emerald-500/20 text-emerald-400' : order.trxVerified ? 'bg-cyan-500/20 text-cyan-400' : 'bg-amber-500/20 text-amber-400'}">
-                            ${order.status === 'Completed' ? 'Delivered' : order.trxVerified ? 'Payment Verified' : order.status}
+                        <span class="px-2 py-0.5 rounded text-[10px] font-bold ${order.status === 'Completed' ? 'bg-emerald-500/20 text-emerald-400' : order.status === 'Rejected' ? 'bg-red-500/20 text-red-400' : order.trxVerified ? 'bg-cyan-500/20 text-cyan-400' : 'bg-amber-500/20 text-amber-400'}">
+                            ${order.status === 'Completed' ? 'Delivered' : order.trxVerified && order.status !== 'Rejected' ? 'Payment Verified' : order.status}
                         </span>
                     </td>
                     <td class="p-3 text-center whitespace-nowrap">
@@ -503,68 +588,68 @@
             `).join('');
         }
 
-        // First Tick Mark (Beside TrxID): Verify Payment & Send Notice to Customer
-        function verifyTransaction(id) {
-            let ord = orders.find(o => o.id === id);
-            if (ord) {
-                ord.trxVerified = true;
-                ord.seen = true;
-                ord.latestMsg = "আপনার Transaction ID টি সঠিক আছে এবং পেমেন্ট হয়েছে, কিছুক্ষণ অপেক্ষা করুন।";
-                localStorage.setItem('ff_orders', JSON.stringify(orders));
-                renderOrders();
-                showNotification("কাস্টমারকে পেমেন্ট কনফার্মেশন নোটিফিকেশন পাঠানো হয়েছে!");
-            }
-        }
+        window.verifyTransaction = async function(id) {
+            await update(ref(db, `ff_orders/${id}`), {
+                trxVerified: true,
+                seen: true,
+                latestMsg: "আপনার Transaction ID টি সঠিক আছে এবং পেমেন্ট হয়েছে, কিছুক্ষণ অপেক্ষা করুন।"
+            });
+            showNotification("কাস্টমারকে পেমেন্ট কনফার্মেশন নোটিফিকেশন পাঠানো হয়েছে!");
+        };
 
-        // Last Tick Mark (Action column): Product Sent to Free Fire Account
-        function completeOrderDelivery(id) {
-            let ord = orders.find(o => o.id === id);
-            if (ord) {
-                ord.status = 'Completed';
-                ord.trxVerified = true;
-                ord.seen = true;
-                ord.latestMsg = "আপনার অর্ডার করা প্রোডাক্টটি আপনার Free Fire একাউন্টে চলে গেছে!";
-                localStorage.setItem('ff_orders', JSON.stringify(orders));
-                renderOrders();
-                showNotification("কাস্টমারকে ডেলিভারি সম্পন্ন হওয়ার নোটিশ পাঠানো হয়েছে!");
-            }
-        }
+        window.completeOrderDelivery = async function(id) {
+            await update(ref(db, `ff_orders/${id}`), {
+                status: 'Completed',
+                trxVerified: true,
+                seen: true,
+                latestMsg: "আপনার অর্ডার করা প্রোডাক্টটি আপনার Free Fire একাউন্টে চলে গেছে!"
+            });
+            showNotification("কাস্টমারকে ডেলিভারি সম্পন্ন হওয়ার নোটিশ পাঠানো হয়েছে!");
+        };
 
-        function updateOrderStatus(id, status) {
-            let ord = orders.find(o => o.id === id);
-            if (ord) { ord.status = status; ord.seen = true; localStorage.setItem('ff_orders', JSON.stringify(orders)); renderOrders(); }
-        }
+        window.updateOrderStatus = async function(id, status) {
+            await update(ref(db, `ff_orders/${id}`), {
+                status: status,
+                seen: true,
+                latestMsg: status === 'Rejected' ? "দুঃখিত, আপনার পেমেন্ট বা Transaction ID টি সঠিক পাওয়া যায়নি।" : ""
+            });
+        };
 
-        function deleteOrder(id) {
+        window.deleteOrder = async function(id) {
             if (confirm("অর্ডারটি মুছে ফেলতে চান?")) {
-                orders = orders.filter(o => o.id !== id);
-                localStorage.setItem('ff_orders', JSON.stringify(orders));
-                renderOrders();
+                await remove(ref(db, `ff_orders/${id}`));
             }
-        }
+        };
 
-        function markAllOrdersSeen() {
-            orders = orders.map(o => ({ ...o, seen: true }));
-            localStorage.setItem('ff_orders', JSON.stringify(orders));
-            renderOrders();
-        }
+        window.markAllOrdersSeen = async function() {
+            const updates = {};
+            orders.forEach(o => {
+                updates[`ff_orders/${o.id}/seen`] = true;
+            });
+            if (Object.keys(updates).length > 0) {
+                await update(ref(db), updates);
+            }
+        };
 
-        function clearCompletedOrders() {
+        window.clearCompletedOrders = async function() {
             if (confirm("সব অর্ডার হিস্ট্রি ক্লিয়ার করতে চান?")) {
-                orders = [];
-                localStorage.setItem('ff_orders', JSON.stringify(orders));
-                renderOrders();
+                await remove(ref(db, 'ff_orders'));
             }
-        }
+        };
 
-        function scrollToOrders() {
-            markAllOrdersSeen();
+        window.scrollToOrders = function() {
+            window.markAllOrdersSeen();
             document.getElementById('ordersSection').scrollIntoView({ behavior: 'smooth' });
-        }
+        };
 
+        // Products Management
         function renderAdminProducts() {
             const tbody = document.getElementById('adminTableBody');
             document.getElementById('adminProductCount').innerText = `মোট ${products.length} টি`;
+            if (products.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-500">এখনো কোনো প্রোডাক্ট যোগ করা হয়নি। বাম পাশের ফর্ম থেকে প্রোডাক্ট যোগ করুন।</td></tr>`;
+                return;
+            }
             tbody.innerHTML = products.map(item => `
                 <tr class="hover:bg-slate-800/50 transition">
                     <td class="p-3"><img src="${item.image}" class="w-10 h-10 object-cover rounded-md border border-slate-700"></td>
@@ -578,7 +663,7 @@
             `).join('');
         }
 
-        function previewSelectedImage(event) {
+        window.previewSelectedImage = function(event) {
             const file = event.target.files[0];
             if (!file) return;
             document.getElementById('fileSelectLabel').innerText = file.name;
@@ -587,7 +672,7 @@
                 const img = new Image();
                 img.onload = function() {
                     const canvas = document.createElement('canvas');
-                    const maxDim = 500;
+                    const maxDim = 360;
                     let w = img.width;
                     let h = img.height;
                     if (w > maxDim || h > maxDim) {
@@ -598,7 +683,7 @@
                     canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
-                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.72);
                     document.getElementById('prodImageBase64').value = compressedDataUrl;
                     document.getElementById('imagePreviewImg').src = compressedDataUrl;
                     document.getElementById('imagePreviewBox').classList.remove('hidden');
@@ -606,10 +691,11 @@
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
-        }
+        };
 
-        function handleFormSubmit(e) {
+        window.handleFormSubmit = async function(e) {
             e.preventDefault();
+            const submitBtn = document.getElementById('submitBtn');
             const name = document.getElementById('prodName').value.trim();
             const price = parseFloat(document.getElementById('prodPrice').value);
             const oldPrice = parseFloat(document.getElementById('prodOldPrice').value) || null;
@@ -622,23 +708,40 @@
                 return;
             }
 
-            products.unshift({ id: 'p_' + Date.now(), name, price, oldPrice, category, image, desc });
-            localStorage.setItem('ff_products', JSON.stringify(products));
-            document.getElementById('productForm').reset();
-            document.getElementById('prodImageBase64').value = '';
-            document.getElementById('imagePreviewBox').classList.add('hidden');
-            document.getElementById('fileSelectLabel').innerText = 'গ্যালারি থেকে ছবি বাছাই করুন (Choose Image)';
-            renderAdminProducts();
-            showNotification("নতুন প্রোডাক্ট যোগ করা হয়েছে!");
-        }
+            submitBtn.disabled = true;
+            submitBtn.innerText = "সেভ হচ্ছে...";
 
-        function deleteProduct(id) {
-            if (confirm("প্রোডাক্ট ডিলিট করতে চান?")) {
-                products = products.filter(p => p.id !== id);
-                localStorage.setItem('ff_products', JSON.stringify(products));
-                renderAdminProducts();
+            try {
+                const id = 'p_' + Date.now();
+                await set(ref(db, `ff_products/${id}`), {
+                    id,
+                    name,
+                    price,
+                    oldPrice,
+                    category,
+                    image,
+                    desc,
+                    createdAt: Date.now()
+                });
+                document.getElementById('productForm').reset();
+                document.getElementById('prodImageBase64').value = '';
+                document.getElementById('imagePreviewBox').classList.add('hidden');
+                document.getElementById('fileSelectLabel').innerText = 'গ্যালারি থেকে ছবি বাছাই করুন (Choose Image)';
+                showNotification("নতুন প্রোডাক্ট লাইভ শপে যোগ করা হয়েছে!");
+            } catch (err) {
+                alert("প্রোডাক্ট সেভ করতে সমস্যা হয়েছে: " + err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "সেভ করুন";
             }
-        }
+        };
+
+        window.deleteProduct = async function(id) {
+            if (confirm("প্রোডাক্ট ডিলিট করতে চান?")) {
+                await remove(ref(db, `ff_products/${id}`));
+                showNotification("প্রোডাক্ট ডিলিট করা হয়েছে!");
+            }
+        };
 
         function showNotification(msg) {
             const toast = document.createElement('div');
@@ -647,24 +750,9 @@
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 4000);
         }
+
+        // Initial auth check
+        window.checkAuthStatus();
     </script>
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-  import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyD-ogpUVBln-gPo_VnhtsGDdZcLh_HzU28",
-    authDomain: "ff-gift-center.firebaseapp.com",
-    databaseURL: "https://ff-gift-center-default-rtdb.firebaseio.com",
-    projectId: "ff-gift-center",
-    storageBucket: "ff-gift-center.appspot.com",
-    messagingSenderId: "172774289094",
-    appId: "1:172774289094:web:8380d53eeb54ebf1c31c7",
-    measurementId: "G-SM7FYL33CL"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-</script>
 </body>
 </html>
